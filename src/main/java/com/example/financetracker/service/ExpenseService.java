@@ -19,9 +19,29 @@ public class ExpenseService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private com.example.financetracker.repository.BudgetRepository budgetRepository;
+
     public Expense createExpense(Long userId, Expense expense) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Budget Check
+        java.util.Optional<com.example.financetracker.model.Budget> budgetOpt = budgetRepository
+                .findByUserIdAndCategory(userId, expense.getCategory());
+
+        if (budgetOpt.isPresent()) {
+            BigDecimal currentTotal = getTotalByCategory(userId, expense.getCategory());
+            BigDecimal newTotal = currentTotal.add(expense.getAmount());
+            if (newTotal.compareTo(budgetOpt.get().getLimitAmount()) > 0) {
+                throw new com.example.financetracker.exception.BudgetExceededException(
+                        "Budget exceeded for category: " + expense.getCategory() +
+                                ". Limit: " + budgetOpt.get().getLimitAmount() +
+                                ", Current Total: " + currentTotal +
+                                ", New Expense: " + expense.getAmount());
+            }
+        }
+
         expense.setUser(user);
         return expenseRepository.save(expense);
     }

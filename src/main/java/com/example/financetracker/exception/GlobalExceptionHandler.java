@@ -28,4 +28,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(BudgetExceededException.class)
+    public ResponseEntity<String> handleBudgetExceededException(BudgetExceededException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 }
